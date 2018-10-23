@@ -31,6 +31,8 @@ namespace CityInfo.ASP
                 applicationBuilder.UseExceptionHandler();
             }
 
+            applicationBuilder.UseStatusCodePages();
+
             // add MVC middleware
             applicationBuilder.UseMvc();
 
