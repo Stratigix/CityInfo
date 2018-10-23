@@ -33,6 +33,8 @@ namespace CityInfo.ASP
 
             // add MVC middleware
             applicationBuilder.UseMvc();
+
+            //applicationBuilder.Run(async context => await context.Response.WriteAsync("Hello World!!!"));
         }
     }
 }
