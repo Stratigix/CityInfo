@@ -43,11 +43,33 @@ namespace CityInfo.ASP.Controllers
         [HttpPost("{cityId}/pointsofinterest")]
         public IActionResult CreatePointOfInterest(int cityId, [FromBody] PointOfInterestForCreationDto pointOfInterest)
         {
-            if (pointOfInterest == null) return BadRequest();
+            // if body is null, send bad request
+            if (pointOfInterest == null)
+            {
+                return BadRequest(ModelState);
+            }
 
+            // add a validation check to the model state to check that the description is not the same as the name.
+            if (pointOfInterest.Description.Equals(pointOfInterest.Name, System.StringComparison.InvariantCultureIgnoreCase))
+            {
+                ModelState.AddModelError("Description", "The description cannot be the same as the name.");
+            }
+
+            // if the model is not valid (decorated by attributes), send bad request
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+
+            }            
+
+            // get the specified city
             var foundCity = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
 
-            if (foundCity == null) return NotFound();
+            // if the city is not found, send not found
+            if (foundCity == null)
+            {
+                return NotFound(ModelState);
+            }
 
             // get the new POI ID - not optimal, will improve (todo)
             var currentMaxId = CitiesDataStore.Current.Cities.SelectMany(city => city.PointsOfInterest).Max(poiDto => poiDto.Id);
@@ -59,8 +81,11 @@ namespace CityInfo.ASP.Controllers
                 Description = pointOfInterest.Description
             };
 
+            // add the new point of interest to the specified city
             foundCity.PointsOfInterest.Add(newPoi);
 
+
+            // create a result pointing to the new city (with the route specified)
             return CreatedAtRoute("GetPointOfInterest", new { cityId = cityId, poiId = newPoi.Id }, newPoi);
         }
     }
