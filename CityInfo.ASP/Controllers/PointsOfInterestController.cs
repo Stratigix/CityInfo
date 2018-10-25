@@ -166,13 +166,21 @@ namespace CityInfo.ASP.Controllers
 
             poiPatch.ApplyTo(poiDto, ModelState);
 
+            // add a validation check to the model state to check that the description is not the same as the name.
+            if (poiDto.Description?.Equals(poiDto.Name, System.StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                ModelState.AddModelError("Description", "The description cannot be the same as the name.");
+            }
+
+            TryValidateModel(poiDto);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             pointOfInterestFromStore.Name = poiDto.Name;
             pointOfInterestFromStore.Description = poiDto.Description;
-
-            if(!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
 
             return NoContent();
         }
