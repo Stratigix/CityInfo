@@ -60,7 +60,7 @@ namespace CityInfo.ASP.Controllers
             {
                 return BadRequest(ModelState);
 
-            }            
+            }
 
             // get the specified city
             var foundCity = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
@@ -68,7 +68,7 @@ namespace CityInfo.ASP.Controllers
             // if the city is not found, send not found
             if (foundCity == null)
             {
-                return NotFound(ModelState);
+                return NotFound();
             }
 
             // get the new POI ID - not optimal, will improve (todo)
@@ -88,5 +88,50 @@ namespace CityInfo.ASP.Controllers
             // create a result pointing to the new city (with the route specified)
             return CreatedAtRoute("GetPointOfInterest", new { cityId = cityId, poiId = newPoi.Id }, newPoi);
         }
+
+        [HttpPut("{cityId}/pointsofinterest/{poiId}")]
+        public IActionResult UpdatePointOfInterest(int cityId, int poiId, [FromBody] PointOfInterestToUpdateDto pointOfInterest)
+        {
+            // if body is null, send bad request
+            if (pointOfInterest == null)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // add a validation check to the model state to check that the description is not the same as the name.
+            if (pointOfInterest.Description?.Equals(pointOfInterest.Name, System.StringComparison.InvariantCultureIgnoreCase) == true)
+            {
+                ModelState.AddModelError("Description", "The description cannot be the same as the name.");
+            }
+
+            // if the model is not valid (decorated by attributes), send bad request
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+
+            }
+
+            // get the specified city
+            var foundCity = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
+
+            // if the city is not found, send not found
+            if (foundCity == null)
+            {
+                return NotFound();
+            }
+
+            var pointOfInterestToUpdate = foundCity.PointsOfInterest.Find(poi => poi.Id == poiId);
+
+            if(pointOfInterestToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            pointOfInterestToUpdate.Name = pointOfInterest.Name;
+            pointOfInterestToUpdate.Description = pointOfInterest.Description;
+
+            return NoContent();
+        }
+
     }
 }
