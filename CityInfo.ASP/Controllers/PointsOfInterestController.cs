@@ -1,6 +1,8 @@
-﻿using CityInfo.ASP.Models;
+﻿using System;
+using CityInfo.ASP.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace CityInfo.ASP.Controllers
@@ -8,17 +10,36 @@ namespace CityInfo.ASP.Controllers
     [Route("api/cities")]
     public class PointsOfInterestController : Controller
     {
+        private readonly ILogger<PointsOfInterestController> _logger;
+
+        public PointsOfInterestController(ILogger<PointsOfInterestController> logger)
+        {
+            _logger = logger;
+        }
+
         [HttpGet("{cityId}/pointsofinterest")]
         public IActionResult GetPointsOfInterest(int cityId)
         {
-            var foundCity = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
-
-            if (foundCity == null)
+            try
             {
-                return NotFound();
-            }
+                var foundCity = CitiesDataStore.Current.Cities.Find(city => city.Id == cityId);
 
-            return Ok(foundCity.PointsOfInterest);
+                if (foundCity == null)
+                {
+                    _logger.LogInformation($"The city with id '{cityId}' was not found.");
+
+                    return NotFound();
+                }
+
+                return Ok(foundCity.PointsOfInterest);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical($"An exception was caught trying to get city with ID '{cityId}'.", e.Message);
+
+                return StatusCode(500, $"An attempt to get the city with ID {cityId} failed.");
+            }
+            
         }
 
         [HttpGet("{cityId}/pointsofinterest/{poiId}", Name = "GetPointOfInterest")]
