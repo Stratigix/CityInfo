@@ -1,7 +1,9 @@
-﻿using CityInfo.ASP.Services;
+﻿using CityInfo.ASP.Entities;
+using CityInfo.ASP.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +25,7 @@ namespace CityInfo.ASP
             services.AddMvc()
                 .AddMvcOptions(option =>
                     option.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter()));
+            
             //.AddJsonOptions(o =>
             //{
             //    if(o.SerializerSettings.ContractResolver != null)
@@ -34,10 +37,15 @@ namespace CityInfo.ASP
             //});
 
             services.AddTransient<IMailService, LocalMailService>();
+            
+            // Init DB Context
+            var connectionString = @"Server=(localdb)\mssqllocaldb;Database=CityInfoDB;Trusted_Connection=true";
+
+            services.AddDbContext<Entities.CityInfoContext>( o => o.UseSqlServer(connectionString));
         }
         
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder applicationBuilder, IHostingEnvironment hostingEnvironment)
+        public void Configure(IApplicationBuilder applicationBuilder, IHostingEnvironment hostingEnvironment, CityInfoContext cityInfoContext)
         {
             // Add the exception handling middleware
             if (hostingEnvironment.IsDevelopment())
@@ -48,6 +56,8 @@ namespace CityInfo.ASP
             {
                 applicationBuilder.UseExceptionHandler();
             }
+            
+            cityInfoContext.EnsureSeedDataForContext();
 
             applicationBuilder.UseStatusCodePages();
 
